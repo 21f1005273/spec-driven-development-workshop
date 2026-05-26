@@ -38,7 +38,7 @@
         }
 
         /* Smooth transition for theme colors */
-        body, header, .sidebar, .content-area, .note-card, .form-group input, .form-group textarea, .search-bar input, .theme-toggle-btn {
+        body, header, .sidebar, .content-area, .note-card, .form-group input, .form-group textarea, .search-bar input, .theme-toggle-btn, #sidebarToggleBtn {
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
         }
 
@@ -46,16 +46,16 @@
             opacity: 0.04;
         }
 
-        .theme-toggle-btn:hover {
+        .theme-toggle-btn:hover, #sidebarToggleBtn:hover {
             background: rgba(255, 255, 255, 0.15) !important;
             transform: scale(1.05);
         }
 
-        body.light-theme .theme-toggle-btn {
+        body.light-theme .theme-toggle-btn, body.light-theme #sidebarToggleBtn {
             background: rgba(0, 0, 0, 0.05);
         }
 
-        body.light-theme .theme-toggle-btn:hover {
+        body.light-theme .theme-toggle-btn:hover, body.light-theme #sidebarToggleBtn:hover {
             background: rgba(0, 0, 0, 0.1) !important;
         }
 
@@ -191,12 +191,17 @@
         .main-container {
             display: grid;
             grid-template-columns: 360px 1fr;
+            transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             flex-grow: 1;
             max-width: 1600px;
             width: 100%;
             margin: 0 auto;
             position: relative;
             z-index: 1;
+        }
+
+        .main-container.sidebar-collapsed {
+            grid-template-columns: 0px 1fr;
         }
 
         /* Sidebar Form */
@@ -210,6 +215,15 @@
             height: calc(100vh - 89px);
             position: sticky;
             top: 89px;
+            transition: var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .main-container.sidebar-collapsed .sidebar {
+            padding: 32px 0;
+            opacity: 0;
+            border-right-width: 0px;
+            pointer-events: none;
         }
 
         .form-title {
@@ -372,25 +386,19 @@
             position: relative;
             overflow: hidden;
             transition: var(--transition-smooth);
-            box-shadow: var(--shadow-premium);
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.4), 0 0 12px -3px var(--note-color);
             cursor: pointer;
         }
 
         .note-card:hover {
             transform: translateY(-4px);
             border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px -1px var(--note-color);
         }
 
-        /* Top ribbon color indicator */
+        /* Top ribbon color indicator removed in favor of glowing category shadows */
         .note-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--note-color, var(--accent-primary));
+            display: none;
         }
 
         .note-card-header {
@@ -592,6 +600,13 @@
 
     <header>
         <div class="logo-container">
+            <!-- Sidebar Collapse Toggle Button -->
+            <button class="theme-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar" style="margin-right: 8px; display: flex; align-items: center; justify-content: center; outline: none; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); cursor: pointer; width: 40px; height: 40px; border-radius: var(--radius-md);">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+            </button>
             <div class="logo-icon">
                 <svg viewBox="0 0 24 24">
                     <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
@@ -984,6 +999,20 @@
                 moonIcon.style.display = 'none';
             }
         }
+
+        // Sidebar Toggle Logic
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mainContainer = document.querySelector('.main-container');
+
+        // Restore collapsed state on load
+        if (localStorage.getItem('sidebar_collapsed') === 'true') {
+            mainContainer.classList.add('sidebar-collapsed');
+        }
+
+        sidebarToggleBtn.addEventListener('click', () => {
+            mainContainer.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebar_collapsed', mainContainer.classList.contains('sidebar-collapsed'));
+        });
     </script>
 </body>
 </html>
