@@ -27,6 +27,38 @@
             --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        body.light-theme {
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e7eb;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Smooth transition for theme colors */
+        body, header, .sidebar, .content-area, .note-card, .form-group input, .form-group textarea, .search-bar input, .theme-toggle-btn {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        body.light-theme::before, body.light-theme::after {
+            opacity: 0.04;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            transform: scale(1.05);
+        }
+
+        body.light-theme .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .theme-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.1) !important;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -550,6 +582,13 @@
     </style>
 </head>
 <body>
+    <script>
+        // Synchronous theme check to prevent flash of wrong theme
+        const savedTheme = localStorage.getItem('notes_theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    </script>
 
     <header>
         <div class="logo-container">
@@ -560,12 +599,33 @@
             </div>
             <h1>SDD Notes</h1>
         </div>
-        <div class="search-bar">
-            <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Search notes...">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <!-- Theme Toggle Button -->
+            <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none;">
+                <!-- Sun Icon (visible in dark mode) -->
+                <svg id="sunIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: block;">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon Icon (visible in light mode) -->
+                <svg id="moonIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search notes...">
+            </div>
         </div>
     </header>
 
@@ -897,6 +957,32 @@
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+
+        // Theme Toggle Logic
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+
+        // Initial setup for icons based on load state
+        updateThemeIcons();
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('notes_theme', isLight ? 'light' : 'dark');
+            updateThemeIcons();
+        });
+
+        function updateThemeIcons() {
+            const isLight = document.body.classList.contains('light-theme');
+            if (isLight) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
         }
     </script>
 </body>
