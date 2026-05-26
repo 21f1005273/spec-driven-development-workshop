@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Notes — A Modern Note-Taking Experience</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #131a30;
+            --bg-tertiary: #1b2542;
+            --accent-primary: #6366f1; /* Indigo */
+            --accent-secondary: #a855f7; /* Purple */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --gradient-accent: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Abstract glowing background circles */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--accent-primary);
+            filter: blur(150px);
+            opacity: 0.15;
+            top: -50px;
+            left: -50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--accent-secondary);
+            filter: blur(180px);
+            opacity: 0.15;
+            bottom: -50px;
+            right: -50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(19, 26, 48, 0.6);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: var(--gradient-accent);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 12px 20px 12px 48px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .search-bar input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .search-bar svg {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            flex-grow: 1;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sidebar Editor Form */
+        .sidebar {
+            padding: 32px;
+            border-right: 1px solid var(--border-color);
+            background: rgba(19, 26, 48, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: calc(100vh - 89px);
+            position: sticky;
+            top: 89px;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex-grow: 1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 180px;
+            flex-grow: 1;
+            line-height: 1.6;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Theme / Tag selection colors */
+        .tag-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tag-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        .tag-dot.selected {
+            border-color: var(--text-main);
+            transform: scale(1.15);
+        }
+
+        .tag-blue { background: #3b82f6; }
+        .tag-purple { background: #8b5cf6; }
+        .tag-pink { background: #ec4899; }
+        .tag-orange { background: #f97316; }
+        .tag-green { background: #10b981; }
+
+        .btn-submit {
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-cancel:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Notes Display Area */
+        .content-area {
+            padding: 40px;
+            overflow-y: auto;
+            height: calc(100vh - 89px);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .note-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-premium);
+            cursor: pointer;
+        }
+
+        .note-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Top ribbon color */
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--note-color, var(--accent-primary));
+        }
+
+        .note-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .note-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .note-card-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .note-card:hover .note-card-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .action-btn:hover {
+            background: var(--accent-primary);
+        }
+
+        .action-btn.delete-btn:hover {
+            background: #ef4444;
+        }
+
+        .action-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-main);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .note-card-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            flex-grow: 1;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 6;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .note-tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--tag-color-text, var(--text-muted));
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 60px 0;
+            color: var(--text-muted);
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            stroke: var(--text-muted);
+            stroke-width: 1.5;
+            fill: none;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .toast-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                height: auto;
+                position: static;
+                padding: 24px;
+            }
+            .content-area {
+                height: auto;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+            </div>
+            <h1>Vibe Notes</h1>
+        </div>
+        <div class="search-bar">
+            <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search notes...">
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar containing Form -->
+        <div class="sidebar">
+            <div class="form-title" id="formTitle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>Create New Note</span>
+            </div>
+
+            <form class="note-form" id="noteForm">
+                <input type="hidden" id="noteId">
+                <div class="form-group">
+                    <label for="noteTitle">Title</label>
+                    <input type="text" id="noteTitle" placeholder="Enter note title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="noteContent">Content</label>
+                    <textarea id="noteContent" placeholder="Start typing your note here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Category Color</label>
+                    <div class="tag-selector">
+                        <div class="tag-dot tag-blue selected" data-color="#3b82f6" data-name="Work"></div>
+                        <div class="tag-dot tag-purple" data-color="#8b5cf6" data-name="Personal"></div>
+                        <div class="tag-dot tag-pink" data-color="#ec4899" data-name="Ideas"></div>
+                        <div class="tag-dot tag-orange" data-color="#f97316" data-name="Todo"></div>
+                        <div class="tag-dot tag-green" data-color="#10b981" data-name="Finance"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    <span>Save Note</span>
+                </button>
+                <button type="button" class="btn-cancel" id="cancelBtn">Cancel Edit</button>
+            </form>
+        </div>
+
+        <!-- Main content displaying notes -->
+        <div class="content-area">
+            <div class="section-header">
+                <h2 class="section-title">All Notes</h2>
+            </div>
+            
+            <div class="notes-grid" id="notesGrid">
+                <!-- Notes will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon toast-success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+        <span class="toast-text" id="toastText">Note saved successfully!</span>
+    </div>
+
+    <script>
+        // State Management
+        let notes = JSON.parse(localStorage.getItem('vibe_notes')) || [];
+        let selectedColor = '#3b82f6';
+        let selectedTagName = 'Work';
+
+        // DOM Elements
+        const noteForm = document.getElementById('noteForm');
+        const noteIdInput = document.getElementById('noteId');
+        const noteTitleInput = document.getElementById('noteTitle');
+        const noteContentInput = document.getElementById('noteContent');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formTitle = document.getElementById('formTitle');
+        const notesGrid = document.getElementById('notesGrid');
+        const searchInput = document.getElementById('searchInput');
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toastText');
+        const tagDots = document.querySelectorAll('.tag-dot');
+
+        // Color selector click handler
+        tagDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                tagDots.forEach(d => d.classList.remove('selected'));
+                dot.classList.add('selected');
+                selectedColor = dot.getAttribute('data-color');
+                selectedTagName = dot.getAttribute('data-name');
+            });
+        });
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNotes();
+        });
+
+        // Add or Update Note
+        noteForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = noteIdInput.value;
+            const title = noteTitleInput.value.trim();
+            const content = noteContentInput.value.trim();
+
+            if (!title || !content) return;
+
+            if (id) {
+                // Edit Note
+                notes = notes.map(note => {
+                    if (note.id === id) {
+                        return {
+                            ...note,
+                            title,
+                            content,
+                            color: selectedColor,
+                            tag: selectedTagName,
+                            updatedAt: new Date().toISOString()
+                        };
+                    }
+                    return note;
+                });
+                showToast('Note updated successfully!');
+            } else {
+                // Create Note
+                const newNote = {
+                    id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    title,
+                    content,
+                    color: selectedColor,
+                    tag: selectedTagName,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                notes.unshift(newNote);
+                showToast('Note created successfully!');
+            }
+
+            saveNotes();
+            resetForm();
+            renderNotes();
+        });
+
+        // Save notes to localStorage
+        function saveNotes() {
+            localStorage.setItem('vibe_notes', JSON.stringify(notes));
+        }
+
+        // Render notes grid
+        function renderNotes(filterQuery = '') {
+            notesGrid.innerHTML = '';
+            
+            const query = filterQuery.toLowerCase().trim();
+            const filteredNotes = notes.filter(note => 
+                note.title.toLowerCase().includes(query) || 
+                note.content.toLowerCase().includes(query)
+            );
+
+            if (filteredNotes.length === 0) {
+                notesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="9" y1="9" x2="15" y2="9"/>
+                            <line x1="9" y1="13" x2="15" y2="13"/>
+                            <line x1="9" y1="17" x2="11" y2="17"/>
+                        </svg>
+                        <h3>${query ? 'No matching notes found' : 'Your workspace is empty'}</h3>
+                        <p>${query ? 'Try searching for something else' : 'Start by typing in the editor on the left!'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredNotes.forEach(note => {
+                const date = new Date(note.updatedAt);
+                const formattedDate = date.toLocaleDateString(undefined, { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card animate-fade-in';
+                noteCard.style.setProperty('--note-color', note.color);
+                
+                // Color text based on tag for better visibility
+                let tagTextColor = note.color;
+
+                noteCard.innerHTML = `
+                    <div class="note-card-header">
+                        <div class="note-card-title">${escapeHTML(note.title)}</div>
+                        <div class="note-card-actions">
+                            <button class="action-btn edit-btn" title="Edit note" onclick="event.stopPropagation(); editNote('${note.id}')">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn delete-btn" title="Delete note" onclick="event.stopPropagation(); deleteNote('${note.id}')">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="note-card-body">${escapeHTML(note.content)}</div>
+                    <div class="note-card-footer">
+                        <span>${formattedDate}</span>
+                        <span class="note-tag" style="--tag-color-text: ${tagTextColor}">${note.tag}</span>
+                    </div>
+                `;
+
+                // clicking card allows editing too
+                noteCard.addEventListener('click', () => editNote(note.id));
+
+                notesGrid.appendChild(noteCard);
+            });
+        }
+
+        // Search Input Event
+        searchInput.addEventListener('input', (e) => {
+            renderNotes(e.target.value);
+        });
+
+        // Edit Note Mode
+        window.editNote = function(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            noteIdInput.value = note.id;
+            noteTitleInput.value = note.title;
+            noteContentInput.value = note.content;
+            
+            // Set tag color
+            selectedColor = note.color;
+            selectedTagName = note.tag;
+            tagDots.forEach(dot => {
+                if (dot.getAttribute('data-color') === note.color) {
+                    dot.classList.add('selected');
+                } else {
+                    dot.classList.remove('selected');
+                }
+            });
+
+            formTitle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                <span>Edit Note</span>
+            `;
+            submitBtn.querySelector('span').innerText = 'Update Note';
+            cancelBtn.style.display = 'flex';
+
+            // Scroll sidebar into view on mobile
+            if (window.innerWidth <= 900) {
+                document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        // Reset form to create mode
+        function resetForm() {
+            noteIdInput.value = '';
+            noteForm.reset();
+            formTitle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>Create New Note</span>
+            `;
+            submitBtn.querySelector('span').innerText = 'Save Note';
+            cancelBtn.style.display = 'none';
+
+            // Default color reset
+            tagDots.forEach(d => d.classList.remove('selected'));
+            const defaultDot = document.querySelector('.tag-blue');
+            if (defaultDot) {
+                defaultDot.classList.add('selected');
+                selectedColor = defaultDot.getAttribute('data-color');
+                selectedTagName = defaultDot.getAttribute('data-name');
+            }
+        }
+
+        cancelBtn.addEventListener('click', resetForm);
+
+        // Delete Note
+        window.deleteNote = function(id) {
+            if (confirm('Are you sure you want to delete this note?')) {
+                notes = notes.filter(n => n.id !== id);
+                saveNotes();
+                if (noteIdInput.value === id) {
+                    resetForm();
+                }
+                renderNotes(searchInput.value);
+                showToast('Note deleted successfully!');
+            }
+        };
+
+        // Helper: Escape HTML to prevent XSS
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Toast Notification System
+        let toastTimeout;
+        function showToast(message) {
+            toastText.innerText = message;
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
